@@ -1,27 +1,36 @@
 pipeline {
-  agent any
+    agent any
 
-  stages {
-    stage('Clone') {
-      steps {
-        git 'https://github.com/YOUR_USERNAME/devops-sample.git'
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        script {
-          docker.build('devops-sample-image')
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git credentialsId: 'github-ssh', url: 'git@github.com:PodiliDinesh/devops-sample.git'
+            }
         }
-      }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build('devops-sample')
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Clean up old containers first (optional)
+                    sh 'docker rm -f devops-app || true'
+                    // Run new one
+                    sh 'docker run -d --name devops-app -p 3000:3000 devops-sample'
+                }
+            }
+        }
     }
 
-    stage('Run Docker Container') {
-      steps {
-        script {
-          docker.image('devops-sample-image').run('-d -p 3000:3000')
+    post {
+        always {
+            echo '✅ Jenkins Pipeline Completed'
         }
-      }
     }
-  }
 }
