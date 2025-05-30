@@ -1,27 +1,38 @@
 pipeline {
-  agent any
+    agent any
+    // This uses any available Jenkins agent (node)
 
-  stages {
-    stage('Clone') {
-      steps {
-        git 'https://github.com/YOUR_USERNAME/devops-sample.git'
-      }
-    }
-
-    stage('Build Docker Image') {
-      steps {
-        script {
-          docker.build('devops-sample-image')
+    stages {
+        stage('Checkout Code') {
+            steps {
+                // Pulls your project from GitHub using SSH credentials
+                git credentialsId: 'github-ssh', url: 'git@github.com:PodiliDinesh/devops-sample.git'
+            }
         }
-      }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Builds a Docker image with tag 'devops-sample'
+                    docker.build('devops-sample')
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Runs the Docker container in background with port 3000 exposed
+                    sh 'docker run -d -p 3000:3000 devops-sample'
+                }
+            }
+        }
     }
 
-    stage('Run Docker Container') {
-      steps {
-        script {
-          docker.image('devops-sample-image').run('-d -p 3000:3000')
+    post {
+        always {
+            // Always runs after pipeline ends
+            echo '✅ Pipeline finished.'
         }
-      }
     }
-  }
 }
